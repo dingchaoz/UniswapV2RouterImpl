@@ -1,6 +1,7 @@
 import { GRAPH_REFDATA_QUERY } from './constant'
 import { Utils } from './utils'
 import fetch from 'node-fetch'
+import fs from 'fs';
 
 export interface Market {
   address: string
@@ -53,6 +54,7 @@ export class RefdataService {
   async markets(reserveUSD: number, timestamp: number) {
     let shouldContinue = true
     const perPage = 1000
+    let marketsArray: Market[] = []
     let markets
     let nextBatchStartTimestamp = timestamp
     while (shouldContinue) {
@@ -62,7 +64,7 @@ export class RefdataService {
               })
               console.log(`Retrieved ${markets.length} Market records`)
               nextBatchStartTimestamp = markets[markets.length - 1].creationTime
-              
+              marketsArray.push(markets)
 
         } catch (e) {
             console.log(`Reached max attempts to get markets, stopping due to:${e}`)
@@ -70,6 +72,12 @@ export class RefdataService {
         }
         shouldContinue = markets.length === perPage
     }
+    fs.writeFile(__filename+ "marketsData.json", JSON.stringify(marketsArray), function(err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+
 
   }
 

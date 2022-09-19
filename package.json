@@ -16,7 +16,7 @@
     "prettier:check": "npm run prettier -- --check",
     "prettier:fix": "npm run prettier -- --write",
     "generate:contracts": "typechain --target ethers-v5 --out-dir src/contracts './node_modules/@uniswap/v2-core/build/**/!(Combined-Json).json' './node_modules/@uniswap/v2-periphery/build/**/!(Combined-Json|*V1*|*Example*).json'",
-    "dev": "NODE_ENV=development ts-node -r tsconfig-paths/register src/index.ts",
+    "dev": "NODE_ENV=development ts-node -r tsconfig-paths/register src/router.ts",
     "prod": "NODE_ENV=production ts-node-transpile-only src/index.ts",
     "start-dev": "NODE_ENV=development node --unhandled-rejections=strict dist/index",
     "start": "NODE_ENV=production node --unhandled-rejections=strict dist/index"
