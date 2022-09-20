@@ -1,7 +1,7 @@
 import { GRAPH_REFDATA_QUERY } from './constant'
 import { Utils } from './utils'
 import fetch from 'node-fetch'
-import fs from 'fs';
+import fs from 'fs'
 
 export interface Market {
   address: string
@@ -58,27 +58,24 @@ export class RefdataService {
     let markets
     let nextBatchStartTimestamp = timestamp
     while (shouldContinue) {
-        try {
-            markets = await Utils.withRetry(3, 3000, () => {
-                return this.post(reserveUSD, nextBatchStartTimestamp.toString())
-              })
-              console.log(`Retrieved ${markets.length} Market records`)
-              nextBatchStartTimestamp = markets[markets.length - 1].creationTime
-              marketsArray.push(markets)
-
-        } catch (e) {
-            console.log(`Reached max attempts to get markets, stopping due to:${e}`)
-            break
-        }
-        shouldContinue = markets.length === perPage
+      try {
+        markets = await Utils.withRetry(3, 3000, () => {
+          return this.post(reserveUSD, nextBatchStartTimestamp.toString())
+        })
+        console.log(`Retrieved ${markets.length} Market records`)
+        nextBatchStartTimestamp = markets[markets.length - 1].creationTime
+        marketsArray.push(markets)
+      } catch (e) {
+        console.log(`Reached max attempts to get markets, stopping due to:${e}`)
+        break
+      }
+      shouldContinue = markets.length === perPage
     }
-    fs.writeFile(__filename+ "marketsData.json", JSON.stringify(marketsArray), function(err) {
-        if (err) {
-            console.log(err);
-        }
-    });
-
-
+    fs.writeFile(__filename + 'marketsData.json', JSON.stringify(marketsArray), function (err) {
+      if (err) {
+        console.log(err)
+      }
+    })
   }
 
   private static getQuery(reserveUSD: number, timestamp: string) {
