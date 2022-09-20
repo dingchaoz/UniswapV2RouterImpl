@@ -161,3 +161,41 @@ let d = 3
 
 const allPaths = printAllPaths(s, d)
 console.log('final results are', allPaths)
+
+
+function getRate(s: number, d:number) {
+    const tokenAddresses = Object.keys(tokens)
+    const sourceToken = tokenAddresses[s]
+    const destToken = tokenAddresses[d]
+    const rate = tokens[destToken].reserve / tokens[sourceToken].reserve
+    console.log(tokens[sourceToken].reserve, tokens[destToken].reserve,rate )
+    return rate
+
+}
+
+function getBestPath(allPaths: any[]) {
+    let bestRate = 0
+    let bestPath
+    for (let i = 0; i < allPaths.length; i++) {
+
+        let rateOfCurrentPath = 1
+        const currentPath = allPaths[i]
+
+        for (let j = 0; j < currentPath.length - 1; j++) {
+
+            const s = currentPath[j]
+            const d = currentPath[j+1]
+            rateOfCurrentPath = rateOfCurrentPath* getRate(s,d)
+
+        }
+
+        if (rateOfCurrentPath > bestRate) {
+            bestRate = rateOfCurrentPath
+            bestPath = currentPath
+        }
+    }
+
+    return {bestPath: bestPath, bestRate: bestRate}
+}
+
+console.log(getBestPath(allPaths))
