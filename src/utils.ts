@@ -58,4 +58,31 @@ export class Utils {
       throw error
     }
   }
+
+  public static delay = (ms) => new Promise((res) => setTimeout(res, ms))
+
+  public static getAmountOut(
+    amountIn: bigint,
+    reserveIn: bigint,
+    reserveOut: bigint,
+    amountInMul = BigInt(9970),
+    reserveInMul = BigInt(10000),
+  ) {
+    const amountInWithFee = amountIn * amountInMul
+    const numerator = amountInWithFee * reserveOut
+    const denominator = reserveIn * reserveInMul + amountInWithFee
+    return numerator / denominator
+  }
+  
+  public static getAmountIn(
+    amountOut: bigint,
+    reserveIn: bigint,
+    reserveOut: bigint,
+    denominatorScale = BigInt(9970),
+    numeratorScale = BigInt(10000),
+  ) {
+    const numerator = reserveIn * amountOut * numeratorScale
+    const denominator = (reserveOut - amountOut) * denominatorScale
+    return numerator / denominator + BigInt(1)
+  }
 }

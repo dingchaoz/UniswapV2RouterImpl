@@ -68,6 +68,7 @@ export class RefdataService {
     let shouldContinue = true
     const perPage = 1000
     let marketsArray: Market[] = []
+    this.tokens = {}
     let markets
     let nextBatchStartTimestamp = timestamp
     while (shouldContinue) {
@@ -96,7 +97,7 @@ export class RefdataService {
    * Get graph query according to the reserveusd and timestamp thresholds
    * @param reserveUSD we fetch markets only if the pool's reserveInUSD is bigger than this threshold, pools of low liquidity will be not pulled
    * @param timestamp  we fetch markets if the created timestamp is newer than this threshold, this will be useful in pulling latest new pools
-   * @returns a customized graph query 
+   * @returns a customized graph query
    */
   private static getQuery(reserveUSD: number, timestamp: string): string {
     const queryOverride = process.env.REFDATA_QUERY_OVERRIDE
@@ -110,7 +111,7 @@ export class RefdataService {
    * Post request to fetch and process market data
    * @param reserveUSD we fetch markets only if the pool's reserveInUSD is bigger than this threshold, pools of low liquidity will be not pulled
    * @param timestamp  we fetch markets if the created timestamp is newer than this threshold, this will be useful in pulling latest new pools
-   * @returns a customized graph query 
+   * @returns a customized graph query
    */
   private async post(reserveUSD: number, timestamp: string): Promise<Market[]> {
     const body = JSON.stringify({
@@ -173,7 +174,7 @@ export class RefdataService {
   /**
    * Process graph repsponse to save markets and tokens infor to the desired formats for later analysis
    * @param markets response from graph api post request
-   * @returns 
+   * @returns
    */
   private async processResponse(markets: MarketsResponse): Promise<Market[]> {
     return markets.data.pairs.map((market) => {
@@ -201,4 +202,9 @@ export class RefdataService {
       return marketObj
     })
   }
+}
+
+export function initRefData() {
+  const GRAPH_REFDATA_URL = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
+  return new RefdataService(GRAPH_REFDATA_URL)
 }

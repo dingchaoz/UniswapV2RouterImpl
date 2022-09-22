@@ -2,7 +2,7 @@ import * as marketData from './market.tsmarketsDataNew.json'
 import * as tokens from './market.tstokenData.json'
 
 export interface BestPathAndRate {
-  bestPath: number[]
+  bestPath: string[]
   bestRate: number
 }
 
@@ -184,7 +184,7 @@ export class RouterService {
 
   getBestPathWithLog(candidatePaths: number[][]): BestPathAndRate {
     let bestRate = Number.NEGATIVE_INFINITY
-    let bestPath
+    let bestPath: number[] = []
     for (let i = 0; i < candidatePaths.length; i++) {
       const currentPath = candidatePaths[i]
       const rateOfCurrentPath = this.getRateInLogFromPath(currentPath)
@@ -195,10 +195,10 @@ export class RouterService {
       }
     }
     console.log(`Best path is`, bestPath)
-    bestPath = bestPath.map((element) => {
+    const bestPathSymbol: string[] = bestPath.map((element) => {
       return this.getTokenSymbol(element)
     })
-    const result = { bestPath: bestPath, bestRate: Math.pow(2, bestRate) } as BestPathAndRate
+    const result = { bestPath: bestPathSymbol, bestRate: Math.pow(2, bestRate) } as BestPathAndRate
     console.log(`Best rate and path`, result)
     return result
   }
