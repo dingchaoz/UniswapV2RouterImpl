@@ -1,52 +1,72 @@
-import * as marketData from './market.tsmarketsData.json'
+import * as marketData from './market.tsmarketsDataNew.json'
 import * as tokens from './market.tstokenData.json'
 
+export interface BestPathAndRate {
+  bestPath: number[]
+  bestRate: number
+}
+
+/**
+ * Router Service Class that constructs graphs of all uniswap trading pairs and computes best conversion rate with path
+ */
 export class RouterService {
-  private v
-  private adjList
-  private allPaths: any[] = []
-  private tokenAddresses = Object.keys(tokens)
+  vertices: number
+  adjList: number[][]
+  allPaths: number[][] = []
+  tokenAddresses: Array<string> = Object.keys(tokens)
 
   constructor(private readonly maxHops: number) {
     console.log(`started router service with max hops at ${maxHops}`)
     this.constructGraph()
   }
 
-  // A directed graph using
-  // adjacency list representation
+  /**
+   *  A directed graph using adjacency list representation
+   * @param vertices : number of verices to initialize
+   */
   Graph(vertices: number) {
-    this.v = vertices
+    this.vertices = vertices
 
     // initialise adjacency list
     this.initAdjList()
   }
 
-  // utility method to initialise
-  // adjacency list
+  /**
+   * Utility method to initialise adjacency list
+   */
   initAdjList() {
-    this.adjList = new Array(this.v)
+    this.adjList = new Array(this.vertices)
 
-    for (let i = 0; i < this.v; i++) {
+    for (let i = 0; i < this.vertices; i++) {
       this.adjList[i] = []
     }
   }
 
-  // add edge from u to v
-  addEdge(u, v) {
+  /**
+   * Add edge from vertice u to vertice v
+   * @param u index of source token in tokens array
+   * @param v index of destination token in tokens array
+   */
+  addEdge(u: number, v: number) {
     // Add v to u's list.
     this.adjList[u].push(v)
   }
 
-  // Prints all paths from
-  // Time Complexity: O(V^V), The time complexity is exponential. From each vertex there are v vertices that can be visited from current vertex.
-  // Auxiliary space: O(V^V), To store the paths V^V space is needed.
-  // 's' to 'd'
-  printAllPaths(s: number, d: number) {
-    let isVisited = new Array(this.v)
-    for (let i = 0; i < this.v; i++) {
+  /**
+   * Prints all paths from s to d, t
+   * Time Complexity: O(V^V), The time complexity is exponential.
+   * From each vertex there are v vertices that can be visited from current vertex.
+   * Auxiliary space: O(V^V), To store the paths V^V space is needed.
+   * @param s index of source token in tokens array
+   * @param d index of destination token in tokens array
+   * @returns all paths from s to d
+   */
+  printAllPaths(s: number, d: number): number[][] {
+    let isVisited = new Array(this.vertices)
+    for (let i = 0; i < this.vertices; i++) {
       isVisited[i] = false
     }
-    let pathList: Number[] = []
+    let pathList: number[] = []
 
     // add source to path[]
     pathList.push(s)
@@ -57,22 +77,30 @@ export class RouterService {
     return this.allPaths
   }
 
-  // A recursive function to print
-  // all paths from 'u' to 'd'.
-  // isVisited[] keeps track of
-  // vertices in current path.
-  // localPathList<> stores actual
-  // vertices in the current path
-
-  printAllPathsUtil(u, d, isVisited, localPathList: any[], maxHops, candidatePaths: any[]) {
+  /**
+   *  A recursive function to print all paths from 'u' to 'd'. isVisited[] keeps track of vertices in current path.
+   * localPathList<> stores actual vertices in the current path
+   * @param u index of source token in tokens array
+   * @param d index of destination token in tokens array
+   * @param isVisited array of boolean storing if node is visited or not
+   * @param localPathList current path traversed
+   * @param maxHops max hops allowed to perform DFS
+   * @param confirmedPaths array of confirmed paths
+   * @returns
+   */
+  printAllPathsUtil(
+    u: number,
+    d: number,
+    isVisited: Array<boolean>,
+    localPathList: number[],
+    maxHops: number,
+    confirmedPaths: number[],
+  ) {
     if (u == d) {
       // if match found then no need to
       // traverse more till depth
-      //console.log(`find path`, localPathList)
-      candidatePaths = candidatePaths.concat(localPathList)
-      this.allPaths.push(candidatePaths)
-      //console.log(`final results atm updated `,this.allPaths)
-      //return results
+      confirmedPaths = confirmedPaths.concat(localPathList)
+      this.allPaths.push(confirmedPaths)
       return
     }
 
@@ -85,9 +113,8 @@ export class RouterService {
       if (!isVisited[this.adjList[u][i]] && maxHops >= 0) {
         // store current node
         // in path[]
-        //console.log(`all paths atm in the loop are ${allPaths}`)
         localPathList.push(this.adjList[u][i])
-        this.printAllPathsUtil(this.adjList[u][i], d, isVisited, localPathList, maxHops - 1, candidatePaths)
+        this.printAllPathsUtil(this.adjList[u][i], d, isVisited, localPathList, maxHops - 1, confirmedPaths)
 
         // remove current node
         // in path[]
@@ -98,86 +125,151 @@ export class RouterService {
     isVisited[u] = false
   }
 
+  /**
+   * create a graph of all connected tokens(trading pairs)
+   */
   constructGraph() {
     const marketPairs = marketData[0]
     this.Graph(Object.keys(tokens).length)
-    const tokenAddresses = Object.keys(tokens)
-
     for (let i = 0; i < marketPairs.length; i++) {
       const market = marketPairs[i]
       const sourceAddress = market.baseSymbolAddress
       const destAddress = market.quoteSymbolAddress
       const s = this.convertTokenAddressToNumber(sourceAddress)
       const d = this.convertTokenAddressToNumber(destAddress)
-      //console.log(`s is ${s}, d is ${d}`)
       this.addEdge(s, d)
       this.addEdge(d, s)
     }
   }
 
-  getRate(s: number, d: number) {
-    
+  /**
+   * Get the conversion rate of a token pair
+   * @param s index of input token in tokens array
+   * @param d index of output token in tokens array
+   * @returns conversion rate
+   */
+  getRate(s: number, d: number): number {
     const sourceToken = this.tokenAddresses[s]
     const destToken = this.tokenAddresses[d]
-    const rate = tokens[destToken].reserve / tokens[sourceToken].reserve
-    //console.log(tokens[sourceToken].reserve, tokens[destToken].reserve, rate)
+    const rate = tokens[sourceToken].rate[sourceToken + destToken]
+    //console.log(`${tokens[sourceToken].symbol} to ${tokens[destToken].symbol} at rate ${rate}`)
     return rate
   }
 
-  getBestPath(candidatePaths: any[]) {
+  /**
+   * Get the path with the best conversion rate among an array of paths
+   * @param candidatePaths an array of all paths that can trade from input token to output token
+   * @returns best rate and best path
+   */
+  getBestPath(candidatePaths: number[][]): BestPathAndRate {
     let bestRate = 0
     let bestPath
     for (let i = 0; i < candidatePaths.length; i++) {
-      let rateOfCurrentPath = 1
       const currentPath = candidatePaths[i]
-
-      for (let j = 0; j < currentPath.length - 1; j++) {
-        const s = currentPath[j]
-        const d = currentPath[j + 1]
-        rateOfCurrentPath = rateOfCurrentPath * this.getRate(s, d)
-      }
+      const rateOfCurrentPath = this.getRateFromPath(currentPath)
 
       if (rateOfCurrentPath > bestRate) {
         bestRate = rateOfCurrentPath
         bestPath = currentPath
       }
     }
-    bestPath = bestPath.map(element => {
-       return this.getTokenSymbol(element)
-    });
-    const result = { bestPath: bestPath, bestRate: bestRate }
-    console.log(result)
+    console.log(`Best path is`, bestPath)
+    bestPath = bestPath.map((element) => {
+      return this.getTokenSymbol(element)
+    })
+    const result = { bestPath: bestPath, bestRate: bestRate } as BestPathAndRate
+    console.log(`Best rate and path`, result)
     return result
   }
 
-  getBestPathAndRate(sourceAddress: string, destAddress: string) {
+  getBestPathWithLog(candidatePaths: number[][]): BestPathAndRate {
+    let bestRate = Number.NEGATIVE_INFINITY
+    let bestPath
+    for (let i = 0; i < candidatePaths.length; i++) {
+      const currentPath = candidatePaths[i]
+      const rateOfCurrentPath = this.getRateInLogFromPath(currentPath)
+
+      if (rateOfCurrentPath > bestRate) {
+        bestRate = rateOfCurrentPath
+        bestPath = currentPath
+      }
+    }
+    console.log(`Best path is`, bestPath)
+    bestPath = bestPath.map((element) => {
+      return this.getTokenSymbol(element)
+    })
+    const result = { bestPath: bestPath, bestRate: Math.pow(2, bestRate) } as BestPathAndRate
+    console.log(`Best rate and path`, result)
+    return result
+  }
+
+  /**
+   * Get the conversion rate by traversing through a list of trading pairs and multiplying them
+   * @param currentPath an array of index of tokens that can be traded by giving in input token and get output token out
+   * @returns conversion rate
+   */
+  getRateFromPath(currentPath: number[]): number {
+    let rateOfCurrentPath = 1
+    for (let j = 0; j < currentPath.length - 1; j++) {
+      const s = currentPath[j]
+      const d = currentPath[j + 1]
+      rateOfCurrentPath = rateOfCurrentPath * this.getRate(s, d)
+    }
+    return rateOfCurrentPath
+  }
+
+  /**
+   * Get the conversion rate by traversing through a list of trading pairs and adding the logarithmic values
+   * @param currentPath an array of index of tokens that can be traded by giving in input token and get output token out
+   * @returns conversion rate
+   */
+  getRateInLogFromPath(currentPath: number[]): number {
+    let rateOfCurrentPath = 0
+    for (let j = 0; j < currentPath.length - 1; j++) {
+      const s = currentPath[j]
+      const d = currentPath[j + 1]
+      const rate = this.getRate(s, d)
+      const rateInLog = Math.log2(rate)
+      rateOfCurrentPath = rateOfCurrentPath + rateInLog
+    }
+    return rateOfCurrentPath
+  }
+  /**
+   * Get the best path and converions rate by providing input and output token addresses
+   * @param sourceAddress input token address
+   * @param destAddress output token address
+   * @returns best rate and best path
+   */
+  getBestPathAndRate(sourceAddress: string, destAddress: string): BestPathAndRate {
     const s = this.convertTokenAddressToNumber(sourceAddress)
     const d = this.convertTokenAddressToNumber(destAddress)
     const candidatePaths = this.printAllPaths(s, d)
-    const candidatePathsSymbols = candidatePaths.map(element => {
-        return element.map(i=>  this.getTokenSymbol(i))
-        
-    });
+    const candidatePathsSymbols = candidatePaths.map((element) => {
+      return element.map((i) => this.getTokenSymbol(i))
+    })
     console.log('Found all possible paths are', candidatePathsSymbols)
-    return this.getBestPath(candidatePaths)
+    //return this.getBestPath(candidatePaths)
+    return this.getBestPathWithLog(candidatePaths)
   }
 
+  /**
+   * get the index of token in the token address array
+   * @param address token address
+   * @returns number index
+   */
   convertTokenAddressToNumber(address: string): number {
     const matchAddress = (element) => element === address
     const index = this.tokenAddresses.findIndex(matchAddress)
     return index
   }
 
-  getTokenSymbol(index: number) {
+  /**
+   * get the token symbol by providing its index
+   * @param index index of token in token address array
+   * @returns symbol string
+   */
+  getTokenSymbol(index: number): string {
     const tokenAddress = this.tokenAddresses[index]
     return tokens[tokenAddress].symbol
-
   }
-
 }
-
-const router = new RouterService(2)
-//const destToken = '0x0d8775f648430679a709e98d2b0cb6250d2887ef' //BAT
-const destToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' //WETH
-const sourceToken = '0x6b175474e89094c44da98b954eedeac495271d0f' //DAI
-router.getBestPathAndRate(sourceToken, destToken)
