@@ -45,10 +45,7 @@ export interface MarketsResponse {
 
 export class RefdataService {
   // timestamp of last element in page
-  private pagePoint
-
-  // token data info
-  private tokens = {}
+  pagePoint
 
   constructor(private readonly refdataUrl: string) {
     console.log('started EVMRefdataService')
@@ -74,14 +71,11 @@ export class RefdataService {
       }
       shouldContinue = markets.length === perPage
     }
-    // fs.writeFile(__filename + 'marketsData.json', JSON.stringify(marketsArray), function (err) {
-    //   if (err) {
-    //     console.log(err)
-    //   }
-    // })
-
-    this.writeData(this.tokens, 'tokenData.json')
-    this.writeData(marketsArray, 'marketsDataNew.json')
+    fs.writeFile(__filename + 'marketsData.json', JSON.stringify(marketsArray), function (err) {
+      if (err) {
+        console.log(err)
+      }
+    })
   }
 
   private static getQuery(reserveUSD: number, timestamp: string) {
@@ -115,25 +109,6 @@ export class RefdataService {
     })
   }
 
-  private extractToken(market: Market) {
-    let address = market.baseSymbolAddress
-    if (!(address in this.tokens)) {
-      this.tokens[address] = { symbol: market.baseSymbol, name: market.baseSymbolName, reserve: market.reserve0 }
-    }
-    address = market.quoteSymbolAddress
-    if (!(address in this.tokens)) {
-      this.tokens[address] = { symbol: market.quoteSymbol, name: market.quoteSymbolName, reserve: market.reserve1 }
-    }
-  }
-
-  private writeData(data, fileName) {
-    fs.writeFile(__filename + fileName, JSON.stringify(data), function (err) {
-      if (err) {
-        console.log(err)
-      }
-    })
-  }
-
   private async processResponse(markets: MarketsResponse): Promise<Market[]> {
     return markets.data.pairs.map((market) => {
       // Switch between abnormal and normal response appropriately
@@ -156,10 +131,7 @@ export class RefdataService {
         reserve0: market.reserve0,
         reserve1: market.reserve1,
       } as Market
-
       this.pagePoint = market.createdAtTimestamp
-      this.extractToken(marketObj)
-
       return marketObj
     })
   }

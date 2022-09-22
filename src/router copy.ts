@@ -5,7 +5,6 @@ export class RouterService {
   private v
   private adjList
   private allPaths: any[] = []
-  private tokenAddresses = Object.keys(tokens)
 
   constructor(private readonly maxHops: number) {
     console.log(`started router service with max hops at ${maxHops}`)
@@ -107,8 +106,10 @@ export class RouterService {
       const market = marketPairs[i]
       const sourceAddress = market.baseSymbolAddress
       const destAddress = market.quoteSymbolAddress
-      const s = this.convertTokenAddressToNumber(sourceAddress)
-      const d = this.convertTokenAddressToNumber(destAddress)
+      let matchAddress = (element) => element === sourceAddress
+      const s = tokenAddresses.findIndex(matchAddress)
+      matchAddress = (element) => element === destAddress
+      const d = tokenAddresses.findIndex(matchAddress)
       //console.log(`s is ${s}, d is ${d}`)
       this.addEdge(s, d)
       this.addEdge(d, s)
@@ -116,9 +117,9 @@ export class RouterService {
   }
 
   getRate(s: number, d: number) {
-    
-    const sourceToken = this.tokenAddresses[s]
-    const destToken = this.tokenAddresses[d]
+    const tokenAddresses = Object.keys(tokens)
+    const sourceToken = tokenAddresses[s]
+    const destToken = tokenAddresses[d]
     const rate = tokens[destToken].reserve / tokens[sourceToken].reserve
     //console.log(tokens[sourceToken].reserve, tokens[destToken].reserve, rate)
     return rate
@@ -142,42 +143,17 @@ export class RouterService {
         bestPath = currentPath
       }
     }
-    bestPath = bestPath.map(element => {
-       return this.getTokenSymbol(element)
-    });
     const result = { bestPath: bestPath, bestRate: bestRate }
     console.log(result)
     return result
   }
 
-  getBestPathAndRate(sourceAddress: string, destAddress: string) {
-    const s = this.convertTokenAddressToNumber(sourceAddress)
-    const d = this.convertTokenAddressToNumber(destAddress)
+  getBestPathAndRate(s: number, d: number) {
     const candidatePaths = this.printAllPaths(s, d)
-    const candidatePathsSymbols = candidatePaths.map(element => {
-        return element.map(i=>  this.getTokenSymbol(i))
-        
-    });
-    console.log('Found all possible paths are', candidatePathsSymbols)
+    console.log('Found all possible paths are', candidatePaths)
     return this.getBestPath(candidatePaths)
   }
-
-  convertTokenAddressToNumber(address: string): number {
-    const matchAddress = (element) => element === address
-    const index = this.tokenAddresses.findIndex(matchAddress)
-    return index
-  }
-
-  getTokenSymbol(index: number) {
-    const tokenAddress = this.tokenAddresses[index]
-    return tokens[tokenAddress].symbol
-
-  }
-
 }
 
 const router = new RouterService(2)
-//const destToken = '0x0d8775f648430679a709e98d2b0cb6250d2887ef' //BAT
-const destToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' //WETH
-const sourceToken = '0x6b175474e89094c44da98b954eedeac495271d0f' //DAI
-router.getBestPathAndRate(sourceToken, destToken)
+router.getBestPathAndRate(2, 3)
