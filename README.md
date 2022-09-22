@@ -12,9 +12,9 @@
         - [Comparison of different market data fetching methods](#Why-Use-Graph)
         - [How do we choose what pools to consider](#filtering-criteria)
     - [Router algorithm](#Routing)
-        -[Assumptions](#assumption)
-        -[How to get all possibe paths](#get-all-paths)
-        -[How to get the best path](#compute-best-path)
+        - [Assumptions](#assumption)
+        - [How to get all possibe paths](#get-all-paths)
+        - [How to get the best path](#compute-best-path)
 - [Router peformance analysis](#analsyis)
 - [Future work](#Future-improvement)
 
