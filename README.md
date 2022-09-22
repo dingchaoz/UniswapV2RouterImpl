@@ -15,7 +15,7 @@
         -[Assumptions](#assumption)
         -[How to get all possibe paths](#get-all-paths)
         -[How to get the best path](#compute-best-path)
-
+- [Router peformance analysis](#analsyis)
 - [Future work](#Future-improvement)
 
 ## Setup
@@ -129,6 +129,10 @@
     log(r1*r2*r3...*rx) = log(r1) + log(r2) + log(r3) + ...+ log(rx)
     ```
     By converting to addition search, the computation can be more efficient and the chance of overflow and underflow is also much lower.
+
+## Analysis
+
+- ### 
 
 ## Future-improvement
 
