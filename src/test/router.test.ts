@@ -3,7 +3,6 @@ import { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import { DataStore } from '../dataStore'
 import { initRefData } from '../market'
-import { BigNumber } from 'ethers'
 import * as dotenv from 'dotenv'
 
 dotenv.config()

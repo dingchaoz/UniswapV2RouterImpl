@@ -100,7 +100,8 @@
 
     #### Why-Use-Graph
 
-    The Graph protocol indexing uniswap events and logs data makes it easy to pull a batch of all pairs and tokens information in a few batch API calls, compared to making RPC calls from Ethereuem node to smart contracts directly, this method is much more efficient and faster.
+    The Graph protocol indexing uniswap events and logs data makes it easy to pull a batch of all pairs and tokens information in a few batch API calls, compared to making RPC calls from Ethereuem node to smart contracts directly, this method is much more efficient and faster. Another good approach is to call a contract called multicall with all the LPs of existing tokens, address and code [here](https://etherscan.io/address/0x5ba1e12693dc8f9c48aad8770482f4739beed696#code), multicall2 main function is aggregate() which takes an array of struct Call {address target, bytes callData}, iterate through each Call and call its static data, and return results into another array of struct Result {bool success; bytes returnData} 
+ 
 
     The downside of using Graph is it takes about 5 or more seconds to get all pairs pulled, depending on the filtering criteria.
 
@@ -114,7 +115,7 @@
     - ### Assumption
     1. We assume trading amount will not be splitted among multiple paths, instead all amount will be traded through a single best route recommended by the routing algorithm.
 
-    2. We also assume maximixing the output amount from a certain input amount is not in current scope, and we only recommend best path that produces the best conversion rate; and input amount is not part of client request message
+    2. We also assume maximizing the output amount from a certain input amount is not in current scope, and we only recommend best path that produces the best conversion rate, and input amount is not part of client request message, this is a strong assumption as in reality pool depth which relating to the liquidity of a pool and its ability to maintain stability with respect to price levels despite huge trade volumes, low depth will show sharp changes in price level in case huge buy or sell order is placed
 
     3. We assume all pools have enough liquidity, this is derived from assumption 2 as we are not interested in getting the best conversion rate in the current scope
 
@@ -133,6 +134,8 @@
 ## Analysis
 
 - ### 
+  - 2 Hops WETH - DAI produces an unrealistic rate of :800k+ with path["WETH","USDT","USD","DAI"], closer examination of this path reveals the reserves of [pool](https://etherscan.io/address/0x50b6071561f068963Bcfe2B341126cd6aCcaFAFb#readContract) of USDT->USD is extremely imbalanced: $75.35 USDT vs $43422 USD, USD dollar [contract](https://etherscan.io/address/0xd233D1f6FD11640081aBB8db125f722b5dc729dc) does not seem legitimate given the last tx was more than 1 year ago.
+  - In production we shall filter out scam pools not only by looking ath the reserveUSD amount, but potentially also include pools whose ratio of notional amount of reservers is fairly balanced, this could be done by comparing `token0.derivedETH.times.pair.reserve0` and `token1.derivedETH.times.pair.reserve1`[source code](https://github.com/Uniswap/v2-subgraph/blob/master/src/mappings/core.ts#L258)
 
 ## Future-improvement
 
